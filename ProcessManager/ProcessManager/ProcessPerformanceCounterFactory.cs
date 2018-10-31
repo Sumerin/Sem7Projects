@@ -15,6 +15,12 @@ namespace ProcessManager
         public const string PROCESSOR_USAGE = "% Processor Time";
         public const string THREAD_COUNT = "Thread Count";
         public const string MEMORY = "Working Set";
+        public const string VIRTUAL_MEMORY = "virtual Bytes";
+        public const string PAGE_FILE = "Page file bytes";
+        public const string PRIVATE_MEMORY = "Private Bytes";
+        public const string PRIORITY = "Priority Base";
+        public const string READ_MEMORY = "IO Read Bytes/sec";
+        public const string WRITE_MEMORY = "IO Write Bytes/sec";
 
         public static PerformanceCounter GetPerfCounterForProcess(Process process,string processCounterName, string instanceName ="")
         {

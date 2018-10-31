@@ -4,8 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProcessManager"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
+        xmlns:Diagnostics="clr-namespace:System.Diagnostics;assembly=System"
         mc:Ignorable="d"
         Title="ModifyDialog" Height="300" Width="500">
+    <Window.Resources>
+        <ObjectDataProvider x:Key="DataFromEnum" MethodName="GetValues"
+                            ObjectType="{x:Type System:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="Diagnostics:ProcessPriorityClass"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -16,17 +26,31 @@
             Grid.Column="0" Grid.Row="0"
             Orientation="Horizontal"
             Margin="5">
-            <TextBlock >
+            <TextBlock VerticalAlignment="Center" >
                 <Run>Process: </Run>
                 <Run Text="{Binding Name}"></Run>
             </TextBlock>
+            <ComboBox ItemsSource="{Binding Source={StaticResource DataFromEnum}}" 
+                      SelectedItem="{Binding Priority}"
+                      IsEnabled="{Binding UnBlockedPriority}"
+                      Margin="5"/>
         </StackPanel>
         <ListView Grid.Column="0" Grid.Row="1"
-                  x:Name="ProcessList"
+                  x:Name="CommandList"
                         ItemsSource="{Binding CommandOnExiting}">
+            <ListView.Resources>
+                <ContextMenu x:Key="CM">
+                    <MenuItem Header="Usuń" 
+                              Command="{Binding RemoveCommand}"
+                              CommandParameter="{Binding Path=SelectedItem, Source={x:Reference CommandList}}"/>
+                </ContextMenu>
+            </ListView.Resources>
+            <ListView.ContextMenu>
+                <StaticResource ResourceKey="CM"/>
+            </ListView.ContextMenu>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn  Width="Auto" DisplayMemberBinding="{Binding Name}">
+                    <GridViewColumn  Width="Auto">
                         <GridViewColumnHeader Content="Command"/>
                     </GridViewColumn>
                 </GridView>

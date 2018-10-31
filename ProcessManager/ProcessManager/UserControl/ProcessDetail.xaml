@@ -18,6 +18,11 @@
             <RowDefinition Height="*"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <TextBlock
             Grid.Column="0" Grid.Row="0"
@@ -39,6 +44,36 @@
             HorizontalAlignment="Center" VerticalAlignment="Center">
             Pamięć:
         </TextBlock>
+        <TextBlock
+            Grid.Column="0" Grid.Row="4"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            Wirtualna pamięć:
+        </TextBlock>
+        <TextBlock
+            Grid.Column="0" Grid.Row="5"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            Pamieć stron:
+        </TextBlock>
+        <TextBlock
+            Grid.Column="0" Grid.Row="6"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            Prywatna pamięć:
+        </TextBlock>
+        <TextBlock
+            Grid.Column="0" Grid.Row="7"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            Odczyt:
+        </TextBlock>
+        <TextBlock
+            Grid.Column="0" Grid.Row="8"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            Zapis:
+        </TextBlock>
+        <TextBlock
+            Grid.Column="0" Grid.Row="9"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            Priorytet:
+        </TextBlock>
 
         <TextBlock
             Grid.Column="1" Grid.Row="0"
@@ -57,8 +92,44 @@
         </TextBlock>
         <TextBlock
             Grid.Column="1" Grid.Row="3"
-            HorizontalAlignment="Center" VerticalAlignment="Center"
-            Text="{Binding MyProcess.Memory, ElementName=uc}">
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Run Text="{Binding MyProcess.Memory, ElementName=uc}"></Run>
+            <Run Text="KB"></Run>
+        </TextBlock>
+        <TextBlock
+            Grid.Column="1" Grid.Row="4"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Run Text="{Binding MyProcess.VirtualMemory, ElementName=uc}"></Run>
+            <Run Text="KB"></Run>
+        </TextBlock>
+        <TextBlock
+            Grid.Column="1" Grid.Row="5"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Run Text="{Binding MyProcess.PageFile, ElementName=uc}"></Run>
+            <Run Text="KB"></Run>
+        </TextBlock>
+        <TextBlock
+            Grid.Column="1" Grid.Row="6"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Run Text="{Binding MyProcess.PrivateKBytes, ElementName=uc}"></Run>
+            <Run Text="KB"></Run>
+        </TextBlock>
+        <TextBlock
+            Grid.Column="1" Grid.Row="7"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Run Text="{Binding MyProcess.ReadKBytes, ElementName=uc}"></Run>
+            <Run Text="KB/sec"></Run>
+        </TextBlock>
+        <TextBlock
+            Grid.Column="1" Grid.Row="8"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Run Text="{Binding MyProcess.WriteKBytes, ElementName=uc}"></Run>
+            <Run Text="KB/sec"></Run>
+        </TextBlock>
+        <TextBlock
+            Grid.Column="1" Grid.Row="9"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Run Text="{Binding MyProcess.Priority, ElementName=uc}"></Run>
         </TextBlock>
     </Grid>
 </UserControl>

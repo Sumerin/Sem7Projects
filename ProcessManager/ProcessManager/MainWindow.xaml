@@ -58,7 +58,14 @@
                        VerticalAlignment="Center"
                        Margin="10"> CMD line:</TextBlock>
             <TextBox Margin="10" Width="200"
-                     x:Name="CmdText"></TextBox>
+                     x:Name="CmdText"
+                     >
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter"
+                        Command="{Binding CmdCommand}" 
+                                CommandParameter="{Binding Text,RelativeSource={RelativeSource AncestorType={x:Type TextBox}}}"></KeyBinding>
+                </TextBox.InputBindings>
+            </TextBox>
             <Button Margin="10" Padding="5,2" 
                     Command="{Binding CmdCommand}"
                     CommandParameter="{Binding Text,ElementName=CmdText}">Run</Button>

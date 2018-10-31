@@ -31,12 +31,19 @@ namespace ProcessManager.ViewModel
         private float memory;
         private string instanceName;
         private Thread ListenExit;
-        private ICommand endProcessCommand;
         private bool isCreatedFromGui;
+        private ICommand endProcessCommand;
         private ICommand addCommand;
+        private ICommand removeCommand;
+        private ProcessPriorityClass priority;
+        private float virtualMemory;
+        private float pageFile;
+        private float privateKBytes;
+        private float readKBytes;
+        private float writeKBytes;
 
         #endregion
-        
+
         public event Action<ProcessViewModel> Exited;
 
         #region Properties
@@ -112,8 +119,69 @@ namespace ProcessManager.ViewModel
                 OnPropertyChanged();
             }
         }
+        public float VirtualMemory
+        {
+            get
+            {
+                return virtualMemory;
+            }
+            private set
+            {
+                virtualMemory = value;
+                OnPropertyChanged();
+            }
+        }
+        public float PageFile
+        {
+            get
+            {
+                return pageFile;
+            }
+            private set
+            {
+                pageFile = value;
+                OnPropertyChanged();
+            }
+        }
+        public float PrivateKBytes
+        {
+            get
+            {
+                return privateKBytes;
+            }
+            private set
+            {
+                privateKBytes = value;
+                OnPropertyChanged();
+            }
+        }
+        public float ReadKBytes
+        {
+            get
+            {
+                return readKBytes;
+            }
+            private set
+            {
+                readKBytes = value;
+                OnPropertyChanged();
+            }
+        }
+        public float WriteKBytes
+        {
+            get
+            {
+                return writeKBytes;
+            }
+            private set
+            {
+                writeKBytes = value;
+                OnPropertyChanged();
+            }
+        }
 
-        public bool IsCreatedFromGui {
+        public bool IsCreatedFromGui
+        {
             get { return isCreatedFromGui; }
             set
             {
@@ -127,9 +195,9 @@ namespace ProcessManager.ViewModel
             get { return addCommand ?? (addCommand = new RelayCommand(AddExitingCommand)); }
         }
 
-        private void AddExitingCommand()
+        public ICommand RemoveCommand
         {
-            throw new NotImplementedException();
+            get { return removeCommand ?? (removeCommand = new RelayCommand(RemoveExitingCommand)); }
         }
 
         public ICommand EndProcessCommand
@@ -138,6 +206,24 @@ namespace ProcessManager.ViewModel
         }
 
         public ObservableCollection<string> CommandOnExiting { get; set; }
+
+        public ProcessPriorityClass Priority
+        {
+            get { return this.priority; }
+            set
+            {
+                if (UnBlockedPriority)
+                {
+                    this.priority = value;
+                    this.process.PriorityClass = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+
+        public bool UnBlockedPriority { get; private set; } = true;
+
         #endregion
 
         public ProcessViewModel()
@@ -151,6 +237,16 @@ namespace ProcessManager.ViewModel
             this.PID = process.Id;
             this.Name = process.ProcessName;
             this.ProcessName = process.MainWindowTitle;
+            this.CommandOnExiting = new ObservableCollection<string>();
+            try
+            {
+
+                this.priority = process.PriorityClass;
+            }
+            catch (Exception)
+            {
+                this.UnBlockedPriority = false;
+            }
 
             ListenExit = new Thread(WaitForExit)
             {
@@ -183,17 +279,11 @@ namespace ProcessManager.ViewModel
         {
             foreach (var settedCommand in CommandOnExiting)
             {
-                var executableCmdBuilder = new StringBuilder();
-                foreach (var commandPart in settedCommand.Split('%'))
-                {
-                    executableCmdBuilder.Append(commandPart);
-                    executableCmdBuilder.Append(this.Name);
-                }
+                var executeCommand = settedCommand.Contains('%') ? ParseCommand(settedCommand) : settedCommand;
 
-                var executeCommand = executableCmdBuilder.ToString();
                 try
                 {
-                    Process.Start("CMD.exe",$"/C {executeCommand}");
+                    Process.Start("CMD.exe", $"/C {executeCommand}");
                 }
                 catch (Exception)
                 {
@@ -202,11 +292,35 @@ namespace ProcessManager.ViewModel
             }
         }
 
+        private string ParseCommand(string settedCommand)
+        {
+            StringBuilder executableCmdBuilder = new StringBuilder();
+            foreach (var commandPart in settedCommand.Split('%'))
+            {
+                if (!string.IsNullOrEmpty(commandPart))
+                {
+                    executableCmdBuilder.Append(commandPart);
+                    executableCmdBuilder.Append(this.Name);
+                }
+            }
+            return executableCmdBuilder.ToString();
+        }
+
+        private void AddExitingCommand(object command)
+        {
+            this.CommandOnExiting.Add(command as string);
+        }
+
+        private void RemoveExitingCommand(object command)
+        {
+            this.CommandOnExiting.Remove(command as string);
+        }
+
         private void OnExited()
         {
-           Exited?.Invoke(this);
+            Exited?.Invoke(this);
         }
-        
+
         private void EndProcess()
         {
             this.process.CloseMainWindow();
@@ -228,62 +342,48 @@ namespace ProcessManager.ViewModel
                 // closing application
             }
 
-            Task.Run(() => CpuWatchingTask());
-            Task.Run(() => ThreadWatchingTask());
-            Task.Run(() => MemoryWatchingTask());
+            Task.Run(
+                () => { WatchingTask(ProcessPerformanceCounterFactory.PROCESSOR_USAGE, x => this.CPU = x); }
+            );
+
+            Task.Run(
+                () => { WatchingTask(ProcessPerformanceCounterFactory.THREAD_COUNT, x => this.ThreadCount = x); }
+            );
+
+            Task.Run(
+                () => { WatchingTask(ProcessPerformanceCounterFactory.MEMORY, x => this.Memory = x / KILO); }
+            );
+            Task.Run(
+                () => { WatchingTask(ProcessPerformanceCounterFactory.VIRTUAL_MEMORY, x => this.VirtualMemory = x / KILO); }
+            );
+            Task.Run(
+                () => { WatchingTask(ProcessPerformanceCounterFactory.PAGE_FILE, x => this.PageFile = x / KILO); }
+            );
+            Task.Run(
+                () => { WatchingTask(ProcessPerformanceCounterFactory.PRIVATE_MEMORY, x => this.PrivateKBytes = x / KILO); }
+            );
+            Task.Run(
+                () => { WatchingTask(ProcessPerformanceCounterFactory.READ_MEMORY, x => this.ReadKBytes = x / KILO); }
+            );
+            Task.Run(
+                () => { WatchingTask(ProcessPerformanceCounterFactory.WRITE_MEMORY, x => this.WriteKBytes = x / KILO); }
+            );
         }
+
         public void StopWatching()
         {
             this.refresh = false;
         }
 
-        private async void CpuWatchingTask()
+        private async void WatchingTask(string usage, Action<float> Update)
         {
             try
             {
-                using (var cpuPerformance = ProcessPerformanceCounterFactory.GetPerfCounterForProcess(process, ProcessPerformanceCounterFactory.PROCESSOR_USAGE, this.instanceName))
+                using (var performance = ProcessPerformanceCounterFactory.GetPerfCounterForProcess(process, usage, this.instanceName))
                 {
                     while (this.refresh)
                     {
-                        this.CPU = cpuPerformance.NextValue();
-                        await Task.Delay(REFRESH_CYLCE);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // closing application
-            }
-        }
-
-        private async void ThreadWatchingTask()
-        {
-            try
-            {
-                using (var threadCountPerformance = ProcessPerformanceCounterFactory.GetPerfCounterForProcess(process, ProcessPerformanceCounterFactory.THREAD_COUNT, this.instanceName))
-                {
-                    while (this.refresh)
-                    {
-                        this.ThreadCount = threadCountPerformance.NextValue();
-                        await Task.Delay(REFRESH_CYLCE);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // closing application
-            }
-        }
-
-        private async void MemoryWatchingTask()
-        {
-            try
-            {
-                using (var memoryPerformance = ProcessPerformanceCounterFactory.GetPerfCounterForProcess(process, ProcessPerformanceCounterFactory.MEMORY, this.instanceName))
-                {
-                    while (this.refresh)
-                    {
-                        this.Memory = memoryPerformance.NextValue() / KILO / KILO;
+                        Update?.Invoke(performance.NextValue());
                         await Task.Delay(REFRESH_CYLCE);
                     }
                 }
