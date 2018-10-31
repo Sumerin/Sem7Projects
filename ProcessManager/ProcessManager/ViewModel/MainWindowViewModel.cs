@@ -25,6 +25,8 @@ namespace ProcessManager.ViewModel
         private ICommand watchProcessCommand;
         private ICommand windowClosed;
         private ICommand cmdCommand;
+        private ICommand stopWatchProcessCommand;
+        private ICommand modifyCommand;
 
         public TabViewModel Tab1ViewModel
         {
@@ -46,6 +48,10 @@ namespace ProcessManager.ViewModel
             }
         }
 
+        public ICommand ModifyCommand
+        {
+            get { return modifyCommand ?? (modifyCommand = new RelayCommand(Modify)); }
+        }
 
         public ICommand WindowLoaded
         {
@@ -55,6 +61,11 @@ namespace ProcessManager.ViewModel
         public ICommand WindowClosed
         {
             get { return windowClosed ?? (windowClosed = new RelayCommand(ClearContext)); }
+        }
+
+        public ICommand StopWatchProcessCommand
+        {
+            get { return stopWatchProcessCommand ?? (stopWatchProcessCommand = new RelayCommand(RemoveFromWatch)); }
         }
 
         public ICommand WatchProcessCommand
@@ -81,18 +92,28 @@ namespace ProcessManager.ViewModel
             }
         }
 
-        private void AddToWatch(object obj)
-        {
-            tab2ViewModel.AddProcess((ProcessViewModel)obj);
-        }
-
-
         public MainWindowViewModel()
         {
             Tab1ViewModel = new TabViewModel();
             Tab2ViewModel = new TabViewModel();
         }
+        
+        private void AddToWatch(object obj)
+        {
+            tab2ViewModel.AddProcess((ProcessViewModel)obj);
+        }
 
+        private void RemoveFromWatch(object obj)
+        {
+            tab2ViewModel.RemoveProcess((ProcessViewModel)obj);
+        }
+
+        private void Modify(object obj)
+        {
+            var dialog = new ModifyDialog((ProcessViewModel) obj);
+            dialog.Show();
+        }
+        
         private void SetUpProcess()
         {
             dispatcherTimer = new DispatcherTimer();

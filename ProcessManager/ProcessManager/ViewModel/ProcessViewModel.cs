@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 
@@ -31,9 +33,10 @@ namespace ProcessManager.ViewModel
         private Thread ListenExit;
         private ICommand endProcessCommand;
         private bool isCreatedFromGui;
+        private ICommand addCommand;
 
         #endregion
-
+        
         public event Action<ProcessViewModel> Exited;
 
         #region Properties
@@ -119,11 +122,22 @@ namespace ProcessManager.ViewModel
             }
         }
 
+        public ICommand AddCommand
+        {
+            get { return addCommand ?? (addCommand = new RelayCommand(AddExitingCommand)); }
+        }
+
+        private void AddExitingCommand()
+        {
+            throw new NotImplementedException();
+        }
+
         public ICommand EndProcessCommand
         {
             get { return endProcessCommand ?? (endProcessCommand = new RelayCommand(EndProcess)); }
         }
 
+        public ObservableCollection<string> CommandOnExiting { get; set; }
         #endregion
 
         public ProcessViewModel()
@@ -138,14 +152,16 @@ namespace ProcessManager.ViewModel
             this.Name = process.ProcessName;
             this.ProcessName = process.MainWindowTitle;
 
-            ListenExit = new Thread(WaitForExit);
+            ListenExit = new Thread(WaitForExit)
+            {
+                IsBackground = true
+            };
             ListenExit.Start();
         }
 
         public void Dispose()
         {
             process?.Dispose();
-            ListenExit?.Abort();
         }
 
         private void WaitForExit()
@@ -154,11 +170,35 @@ namespace ProcessManager.ViewModel
             {
                 this.process.WaitForExit();
                 StopWatching();
+                OnExiting();
                 OnExited();
             }
             catch (Exception)
             {
 
+            }
+        }
+
+        private void OnExiting()
+        {
+            foreach (var settedCommand in CommandOnExiting)
+            {
+                var executableCmdBuilder = new StringBuilder();
+                foreach (var commandPart in settedCommand.Split('%'))
+                {
+                    executableCmdBuilder.Append(commandPart);
+                    executableCmdBuilder.Append(this.Name);
+                }
+
+                var executeCommand = executableCmdBuilder.ToString();
+                try
+                {
+                    Process.Start("CMD.exe",$"/C {executeCommand}");
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show($"Command {executeCommand} is incorrect command", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 

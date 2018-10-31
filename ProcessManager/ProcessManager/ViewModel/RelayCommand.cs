@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace ProcessManager.ViewModel
 {
-    public class RelayCommand : ICommand, IDisposable
+    public class RelayCommand : ICommand
     {
         public event EventHandler CanExecuteChanged;
 
@@ -40,21 +40,10 @@ namespace ProcessManager.ViewModel
             return canExecuteFunc();
         }
 
-        public void Dispose()
-        {
-            RemoveAllEvents();
-        }
-
         public void Execute(object parameter)
         {
             executeAction?.Invoke();
             execute?.Invoke(parameter);
         }
-
-        public void RemoveAllEvents()
-        {
-            CanExecuteChanged = null;
-        }
-
     }
 }

@@ -30,6 +30,9 @@
                             <MenuItem Header="Obserwuj" 
                                       Command="{Binding WatchProcessCommand}"
                                       CommandParameter="{Binding Tab1ViewModel.SelectedItem}"/>
+                            <MenuItem Header="Modyfikuj.." 
+                                      Command="{Binding ModifyCommand}"
+                                      CommandParameter="{Binding Tab1ViewModel.SelectedItem}"/>
                             <MenuItem Header="Zakoncz"
                                       Command="{Binding Tab1ViewModel.SelectedItem.EndProcessCommand}"/>
                         </ContextMenu>
@@ -37,7 +40,17 @@
                 </local:ProcessView>
             </TabItem>
             <TabItem Header="Obsewowane">
-                <local:ProcessView ViewModel="{Binding Tab2ViewModel}"></local:ProcessView>
+                <local:ProcessView ViewModel="{Binding Tab2ViewModel}">
+                    <local:ProcessView.CtxMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Przestań obserwować" 
+                                      Command="{Binding StopWatchProcessCommand}"
+                                      CommandParameter="{Binding Tab1ViewModel.SelectedItem}"/>
+                            <MenuItem Header="Zakoncz"
+                                      Command="{Binding Tab1ViewModel.SelectedItem.EndProcessCommand}"/>
+                        </ContextMenu>
+                    </local:ProcessView.CtxMenu>
+                </local:ProcessView>
             </TabItem>
         </TabControl>
         <StackPanel Grid.Row="1" Orientation="Horizontal">
