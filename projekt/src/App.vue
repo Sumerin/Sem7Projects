@@ -1,12 +1,14 @@
 <template>
   <div id="app">
 	<h2>{{title}}</h2>
-	<my-com :collection='time'></my-com>
+	<my-table :time='time' :rows='rows'></my-table>
+	<add-form :dat='emptyobject' @addFunction="addfunction" />
   </div>
 </template>
 
 <script>
-import clock from './clock.vue'
+import table from './VueGoodTable.vue'
+import form from './AddForm.vue'
 
 function FormatNumberLength(num, length) {
     var r = "" + num;
@@ -25,22 +27,52 @@ var dat =
 }
 
 setInterval(function(){
- var objDat = new Date();
+    objDat = new Date();
 	dat.hour = FormatNumberLength(objDat.getHours(),2);
 	dat.min = FormatNumberLength(objDat.getMinutes(),2);
 	dat.sec = FormatNumberLength(objDat.getSeconds(),2);
  }, 1000);
+ 
+ 
+ var data1 = [
+	];
+	
+ setInterval(function(){
+	let time = FormatNumberLength(objDat.getHours(),2);
+	time+=":";
+	time+=FormatNumberLength(objDat.getMinutes(),2);
+	
+	data1.forEach(x=> {
+		if(x.time === time)
+		{
+			alert("Godzina:"+x.time+"\nzdarzenie:"+x.task+"\npowiadomienie:"+x.msg);
+		}});
+ }, 60000);
+ 
+var regex = new RegExp("^([0-1][0-9]|2[0-3]):([0-5][0-9])$");
+ 
+var myobj = {id:0, time:"",task:"",topic:"", msg:"",IsValidTime:function(){return regex.test(this.time);}};
  
 export default {
   name: 'app',
   data () {
     return {
 	title:"my App",
-	time:dat
+	time:dat,
+	rows: data1,
+	emptyobject: myobj,
+	addfunction: function()
+	{
+		if(myobj.IsValidTime())
+		{
+			data1.push(JSON.parse(JSON.stringify((myobj))));
+		}
+	}
 	}
   },
   components: {
-  'my-com':clock
+  'my-table':table,
+  'add-form':form
   }
 }
 </script>
