@@ -1,0 +1,182 @@
+﻿<Window x:Class="Gui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Gui"
+        xmlns:ctrl="clr-namespace:Itenso.Windows.Controls.ListViewLayout;assembly=Itenso.Windows.Controls.ListViewLayout"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        mc:Ignorable="d"
+        Title="MainWindow"
+        MinWidth="1024" MinHeight="640"
+        Width="1024" Height="640">
+    <Window.Resources>
+        <local:XSizeConverter x:Key="xConverter" />
+        <local:YSizeConverter x:Key="yConverter" />
+
+        <local:XSizeEclipseConverter x:Key="xConverterEclipse" />
+        <local:YSizeEclipseConverter x:Key="yConverterEclipse" />
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <Grid
+            Grid.Column="0" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.Background>
+                <LinearGradientBrush EndPoint="0.504,2" StartPoint="0.504,0.03">
+                    <GradientStop Color="#F02F2F2F" Offset="0"/>
+                    <GradientStop Color="#FF0F0F0F" Offset="0.5"/>
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <GroupBox Header=".TSP file" 
+                      Margin="10"
+                      Foreground="CornflowerBlue"
+                      Grid.Row="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="1" 
+                        HorizontalAlignment="Stretch" Margin="10" MinWidth="110"
+                             MaxHeight="20" Text="{Binding Filename}" IsEnabled="{Binding EnabledUI}"/>
+                    <Button Grid.Column="2"  
+                        MaxHeight="20" Content="..." Command="{Binding OpenFileCommand}" IsEnabled="{Binding EnabledUI}"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Margin="10" Header="Mechanism" Foreground="CornflowerBlue" Grid.Row="1"></GroupBox>
+            <GroupBox Margin="10" Header="How many" Foreground="CornflowerBlue" Grid.Row="2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="80"/>
+                    </Grid.ColumnDefinitions>
+                    <xctk:IntegerUpDown Grid.Column="1" Grid.Row="0"
+                                        MaxHeight="20"
+                                        Minimum="0"
+                                        Value="{Binding WorkersCount}" />
+                </Grid>
+            </GroupBox>
+            <GroupBox Margin="10" Header="How long" Foreground="CornflowerBlue" Grid.Row="3">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" Grid.Row="0" Content="Phase 1 [s]" Foreground="White"/>
+                    <xctk:IntegerUpDown Grid.Column="1" Grid.Row="0"
+                                        Minimum="1"
+                                        MaxHeight="20"
+                                        Value="{Binding PhaseOneInSeconds}" />
+                    
+                    <Label Grid.Column="0" Grid.Row="1" Content="Phase 2 [s]" Foreground="White"/>
+                    <xctk:IntegerUpDown  Grid.Column="1" Grid.Row="1"
+                                         Minimum="1"
+                                         MaxHeight="20"
+                                         Value="{Binding PhaseTwoInSeconds}" />
+                </Grid>
+            </GroupBox>
+            <GroupBox Margin="10"  Header="Progress &amp; Results" Foreground="CornflowerBlue" Grid.Row="4">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" Grid.Row="0" Content="Best Result" Foreground="White"/>
+                    <Label Grid.Column="1" Grid.Row="0" Content="{Binding BestTspResult.Distance}" Foreground="White"/>
+                    <Label Grid.Column="0" Grid.Row="1" Content="Solution Count" Foreground="White"/>
+                    <Label Grid.Column="1" Grid.Row="1" Content="{Binding SolutionCount}" Foreground="White"/>
+                </Grid>
+            </GroupBox>
+            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="Start" Margin="10" Padding="5,0"
+                        IsEnabled="{Binding EnabledUI}"
+                        Command="{Binding StartCommand}"/>
+                <Button Content="Exit" Margin="10" Padding="5,0"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Column="1">
+            <Grid.Background>
+                <LinearGradientBrush EndPoint="0.504,2" StartPoint="0.504,0.03">
+                    <GradientStop Color="#F0FFFFFF" Offset="0"/>
+                    <GradientStop Color="#FF11118F" Offset="1"/>
+                </LinearGradientBrush>
+            </Grid.Background>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Canvas Grid.Row="0">
+                <ItemsControl ItemsSource="{Binding BestTspResult.BestTourEdges}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Line X1="{Binding A.X, Converter={StaticResource xConverter}}" Y1="{Binding A.Y, Converter={StaticResource yConverter}}"
+                                  X2="{Binding B.X, Converter={StaticResource xConverter}}" Y2="{Binding B.Y, Converter={StaticResource yConverter}}" Stroke="Red"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ItemsControl ItemsSource="{Binding BestTspResult.BestTour}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Ellipse StrokeThickness="1.0" Stroke="Black" Fill="MistyRose" Width="8.0" Height="8.0"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style>
+                            <Setter Property="Canvas.Top" Value="{Binding Y, Converter={StaticResource yConverterEclipse}}"/>
+                            <Setter Property="Canvas.Left" Value="{Binding X, Converter={StaticResource xConverterEclipse}}"/>
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </Canvas>
+
+            <GroupBox Grid.Row ="1" Header="Optimal Tour" FontWeight="Bold" FontSize="16" BorderThickness="0">
+                <ListView ctrl:ListViewLayoutManager.Enabled="true" 
+                          ItemsSource="{Binding BestTspResult.BestTour}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="ID" ctrl:ProportionalColumn.Width="1" DisplayMemberBinding="{Binding Id}"></GridViewColumn>
+                            <GridViewColumn Header="X" ctrl:ProportionalColumn.Width="1" DisplayMemberBinding="{Binding X}"></GridViewColumn>
+                            <GridViewColumn Header="Y" ctrl:ProportionalColumn.Width="1" DisplayMemberBinding="{Binding Y}"></GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+        </Grid>
+    </Grid>
+</Window>
