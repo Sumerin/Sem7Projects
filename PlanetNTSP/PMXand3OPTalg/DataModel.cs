@@ -8,6 +8,7 @@ using System.Windows;
 
 namespace TSP
 {
+    [Serializable]
     public class Location : IEquatable<Location>
     {
         public int Id { get; set; }

@@ -124,6 +124,7 @@ namespace TSP
 
     }
 
+    [Serializable]
     public class Edge : IEquatable<Edge>
     {
         public Location A { get; set; }
@@ -135,6 +136,7 @@ namespace TSP
         }
     }
 
+    [Serializable]
     public class TspResult
     {
         public List<Location> BestTour { get; set; }

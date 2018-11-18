@@ -60,7 +60,20 @@
                         MaxHeight="20" Content="..." Command="{Binding OpenFileCommand}" IsEnabled="{Binding EnabledUI}"/>
                 </Grid>
             </GroupBox>
-            <GroupBox Margin="10" Header="Mechanism" Foreground="CornflowerBlue" Grid.Row="1"></GroupBox>
+            <GroupBox Margin="10" Header="Mechanism" Foreground="CornflowerBlue" Grid.Row="1">
+                <Grid IsEnabled="{Binding EnabledUI}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <RadioButton Grid.Column="0" Foreground="White"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                        GroupName="Source" Content="Tasks" IsChecked="{Binding TaskFlag}"/>
+                    <RadioButton Grid.Column="1" Foreground="White"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                        GroupName="Source" Content="Processes"/>
+                </Grid>
+            </GroupBox>
             <GroupBox Margin="10" Header="How many" Foreground="CornflowerBlue" Grid.Row="2">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -89,7 +102,7 @@
                                         Minimum="1"
                                         MaxHeight="20"
                                         Value="{Binding PhaseOneInSeconds}" />
-                    
+
                     <Label Grid.Column="0" Grid.Row="1" Content="Phase 2 [s]" Foreground="White"/>
                     <xctk:IntegerUpDown  Grid.Column="1" Grid.Row="1"
                                          Minimum="1"

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +18,7 @@ namespace Gui.ViewModel
 {
     public class MainWindowViewModel : NotifyPropertyChanged
     {
+        private static ulong number = 0;
         private readonly object lockObject = new object();
 
         private TspResult bestTspResult;
@@ -72,6 +76,8 @@ namespace Gui.ViewModel
             }
         }
 
+        public bool TaskFlag { get; set; } = true;
+
         public int PhaseOneInSeconds
         {
             get { return phaseOneTimeInSeconds; }
@@ -99,10 +105,18 @@ namespace Gui.ViewModel
             {
                 if (!this.EnabledUI)
                 {
+
                     int diff = (int)(value - workersCount);
                     if (diff > 0)
                     {
-                        InvokeWorkers((uint)diff);
+                        if (TaskFlag)
+                        {
+                            InvokeWorkers((uint)diff);
+                        }
+                        else
+                        {
+                            InvokeProcessWorkers((uint)diff);
+                        }
                     }
                     else if (diff < 0)
                     {
@@ -150,13 +164,50 @@ namespace Gui.ViewModel
             var startResult = new TspResult() { BestTour = startTour, BestTourEdges = startTour.ConvertToEdgeList(), Distance = double.MaxValue };
             CalculateScale(startTour);
             this.BestTspResult = startResult;
+            uint count = workersCount;
 
-            await Task.Factory.StartNew(() =>
+            if (TaskFlag)
             {
-                uint count = workersCount;
+                await Task.Factory.StartNew(() =>
+                {
+                    InvokeWorkers(count);
+                });
+            }
+            else
+            {
+                await Task.Factory.StartNew(() =>
+                {
+                    InvokeProcessWorkers(count);
+                });
+            }
+        }
 
-                InvokeWorkers(count);
-            });
+        private void InvokeProcessWorkers(uint count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                var tokenSource = new CancellationTokenSource();
+                Task.Factory.StartNew(() =>
+                {
+                    string pipeName = $"NTSP{number++}";
+                    using (var pipeClient = new NamedPipeClientStream(pipeName))
+                    {
+                        var process = Process.Start("PMXand3OPTalg.exe",
+                            $"{filename} {pipeName} {PhaseOneInSeconds} {PhaseTwoInSeconds}");
+                        pipeClient.Connect();
+
+                        var binaryFormatter = new BinaryFormatter();
+                        while (!tokenSource.Token.IsCancellationRequested)
+                        {
+                            var result = (TspResult)binaryFormatter.Deserialize(pipeClient);
+                            result.BestTourEdges = result.BestTour.ConvertToEdgeList();
+                            UpdateResult(result);
+                        }
+                        process.Kill();
+                    }
+                });
+                tasksToken.Add(tokenSource);
+            }
         }
 
         private void InvokeWorkers(uint count)
