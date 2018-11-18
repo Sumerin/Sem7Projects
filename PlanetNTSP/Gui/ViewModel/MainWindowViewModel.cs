@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
 using TSP;
@@ -20,6 +21,7 @@ namespace Gui.ViewModel
         private string filename;
         private ICommand openFileCommand;
         private ICommand startCommand;
+        private ICommand sizeChangedCommand;
         private int solutionCount;
         private bool enabledUI = true;
         private int phaseOneTimeInSeconds = 10;
@@ -27,6 +29,8 @@ namespace Gui.ViewModel
         private uint workersCount = 8;
         private List<CancellationTokenSource> tasksToken = new List<CancellationTokenSource>();
         private List<Location> startTour;
+        private ICommand stopCommand;
+        private ICommand exitCommand;
 
         public TspResult BestTspResult
         {
@@ -70,7 +74,7 @@ namespace Gui.ViewModel
 
         public int PhaseOneInSeconds
         {
-            get { return phaseOneTimeInSeconds;}
+            get { return phaseOneTimeInSeconds; }
             set
             {
                 phaseOneTimeInSeconds = value;
@@ -102,8 +106,8 @@ namespace Gui.ViewModel
                     }
                     else if (diff < 0)
                     {
-                        KillWorkers((uint) Math.Abs(diff));
-                    } 
+                        KillWorkers((uint)Math.Abs(diff));
+                    }
                 }
                 workersCount = value;
                 OnPropertyChanged();
@@ -112,6 +116,9 @@ namespace Gui.ViewModel
 
         public ICommand OpenFileCommand => openFileCommand ?? (openFileCommand = new RelayCommand(Open));
         public ICommand StartCommand => startCommand ?? (startCommand = new RelayCommand(Start));
+        public ICommand StopCommand => stopCommand ?? (stopCommand = new RelayCommand(Stop));
+        public ICommand ExitCommand => exitCommand ?? (exitCommand = new RelayCommand(Exit));
+        public ICommand SizeChangedCommand => sizeChangedCommand ?? (sizeChangedCommand = new RelayCommand(SizeChanged));
 
         private void Open()
         {
@@ -122,20 +129,34 @@ namespace Gui.ViewModel
             }
         }
 
-        private void Start()
+        private void Stop()
+        {
+            KillWorkers(this.WorkersCount);
+            this.EnabledUI = true;
+        }
+
+        private void Exit()
+        {
+            Application.Current.MainWindow.Close();
+        }
+
+        private async void Start()
         {
             this.EnabledUI = false;
 
+            this.SolutionCount = 0;
             var dataModel = new DataModel(this.Filename);
             startTour = new List<Location>(dataModel.Data);
             var startResult = new TspResult() { BestTour = startTour, BestTourEdges = startTour.ConvertToEdgeList(), Distance = double.MaxValue };
+            CalculateScale(startTour);
             this.BestTspResult = startResult;
 
-            CalculateScale(startTour);
+            await Task.Factory.StartNew(() =>
+            {
+                uint count = workersCount;
 
-            uint count = workersCount;
-
-            InvokeWorkers(count);
+                InvokeWorkers(count);
+            });
         }
 
         private void InvokeWorkers(uint count)
@@ -231,6 +252,22 @@ namespace Gui.ViewModel
 
                 YSizeConverter.MinY = Math.Min(YSizeConverter.MinY, location.Y);
                 YSizeConverter.MaxY = Math.Max(YSizeConverter.MaxY, location.Y);
+            }
+        }
+
+        private void SizeChanged(object obj)
+        {
+            var canvas = obj as Canvas;
+            if (canvas != null)
+            {
+                XSizeClass.MaxViewX = canvas.ActualWidth - XSizeClass.Margin;
+                YSizeClass.MaxViewY = canvas.ActualHeight - YSizeClass.Margin;
+
+                lock (lockObject)
+                {
+                    var copyResult = new TspResult() { BestTour = new List<Location>(BestTspResult.BestTour), BestTourEdges = new List<Edge>(BestTspResult.BestTourEdges), Distance = BestTspResult.Distance };
+                    this.BestTspResult = copyResult;
+                }
             }
         }
     }

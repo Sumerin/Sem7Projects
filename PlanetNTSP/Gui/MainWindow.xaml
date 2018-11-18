@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Gui"
         xmlns:ctrl="clr-namespace:Itenso.Windows.Controls.ListViewLayout;assembly=Itenso.Windows.Controls.ListViewLayout"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         mc:Ignorable="d"
         Title="MainWindow"
         MinWidth="1024" MinHeight="640"
@@ -16,6 +17,8 @@
 
         <local:XSizeEclipseConverter x:Key="xConverterEclipse" />
         <local:YSizeEclipseConverter x:Key="yConverterEclipse" />
+
+        <local:NegBoleanConverter x:Key="negBoleanConverter" />
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -114,7 +117,12 @@
                 <Button Content="Start" Margin="10" Padding="5,0"
                         IsEnabled="{Binding EnabledUI}"
                         Command="{Binding StartCommand}"/>
-                <Button Content="Exit" Margin="10" Padding="5,0"/>
+                <Button Content="Stop" Margin="10" Padding="5,0"
+                        Command="{Binding StopCommand}"
+                        IsEnabled="{Binding EnabledUI,Converter={StaticResource negBoleanConverter}}"/>
+                <Button Content="Exit" Margin="10" Padding="5,0"
+                        Command="{Binding ExitCommand}"
+                        IsEnabled="{Binding EnabledUI}"/>
             </StackPanel>
         </Grid>
 
@@ -130,7 +138,12 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Canvas Grid.Row="0">
+            <Canvas Grid.Row="0" x:Name="CanvasView">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SizeChanged">
+                        <i:InvokeCommandAction Command="{Binding SizeChangedCommand}" CommandParameter="{Binding ElementName=CanvasView}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
                 <ItemsControl ItemsSource="{Binding BestTspResult.BestTourEdges}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
