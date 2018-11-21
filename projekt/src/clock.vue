@@ -1,13 +1,13 @@
 <template>
 	<div>
-	{{collection.hour}}:{{collection.min}}:{{collection.sec}}
+	{{date|filterClock}}
 	</div>
 </template>
 
 <script>
 export default
 {
- props:['collection']
+ props:['date']
 }
 </script>
 

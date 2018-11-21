@@ -2,7 +2,7 @@
   <div>
   	<h2>
 	Harmonogram:
-	<my-clock :collection='time'></my-clock>
+	<my-clock :date='time'></my-clock>
 	</h2>
 	<vue-good-table :columns="columns"
 					:rows="rows"
