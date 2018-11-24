@@ -35,6 +35,7 @@ namespace Gui.ViewModel
         private List<Location> startTour;
         private ICommand stopCommand;
         private ICommand exitCommand;
+        private ICommand closingCommand;
 
         public TspResult BestTspResult
         {
@@ -133,6 +134,15 @@ namespace Gui.ViewModel
         public ICommand StopCommand => stopCommand ?? (stopCommand = new RelayCommand(Stop));
         public ICommand ExitCommand => exitCommand ?? (exitCommand = new RelayCommand(Exit));
         public ICommand SizeChangedCommand => sizeChangedCommand ?? (sizeChangedCommand = new RelayCommand(SizeChanged));
+        public ICommand ClosingCommand => closingCommand ?? (closingCommand = new RelayCommand(ClosingWindow));
+
+        private void ClosingWindow()
+        {
+            if (this.EnabledUI)
+            {
+                Stop();
+            }
+        }
 
         private void Open()
         {
@@ -158,28 +168,27 @@ namespace Gui.ViewModel
         {
             this.EnabledUI = false;
 
-            this.SolutionCount = 0;
-            var dataModel = new DataModel(this.Filename);
-            startTour = new List<Location>(dataModel.Data);
-            var startResult = new TspResult() { BestTour = startTour, BestTourEdges = startTour.ConvertToEdgeList(), Distance = double.MaxValue };
-            CalculateScale(startTour);
-            this.BestTspResult = startResult;
-            uint count = workersCount;
+            this.solutionCount = -1;
 
-            if (TaskFlag)
+            await Task.Factory.StartNew(() =>
             {
-                await Task.Factory.StartNew(() =>
+                var dataModel = new DataModel(this.Filename);
+                startTour = new List<Location>(dataModel.Data);
+                var startResult = new TspResult()
+                    {BestTour = startTour, BestTourEdges = startTour.ConvertToEdgeList(), Distance = double.MaxValue};
+                CalculateScale(startTour);
+                UpdateResult(startResult);
+                uint count = workersCount;
+
+                if (TaskFlag)
                 {
-                    InvokeWorkers(count);
-                });
-            }
-            else
-            {
-                await Task.Factory.StartNew(() =>
+                    Task.Factory.StartNew(() => { InvokeWorkers(count); }).Wait();
+                }
+                else
                 {
-                    InvokeProcessWorkers(count);
-                });
-            }
+                    Task.Factory.StartNew(() => { InvokeProcessWorkers(count); }).Wait();
+                }
+            });
         }
 
         private void InvokeProcessWorkers(uint count)
@@ -224,7 +233,7 @@ namespace Gui.ViewModel
                         result.BestTourEdges = result.BestTour.ConvertToEdgeList();
                         UpdateResult(result);
                     }
-                });
+                }, TaskCreationOptions.LongRunning);
                 tasksToken.Add(tokenSource);
             }
         }
@@ -241,20 +250,22 @@ namespace Gui.ViewModel
 
         private void UpdateResult(TspResult result)
         {
-            lock (lockObject)
-            {
-                if (bestTspResult == null
-                    || result.Distance < bestTspResult.Distance)
+            Application.Current?.Dispatcher.Invoke(
+                () =>
                 {
-                    Application.Current.Dispatcher.Invoke(
-                        () =>
+                    lock (lockObject)
+                    {
+                        if (bestTspResult == null
+                            || result.Distance < bestTspResult.Distance)
                         {
-                            this.BestTspResult = result;
-                        });
-                }
 
-                SolutionCount += 1;
-            }
+                            this.BestTspResult = result;
+
+                        }
+
+                        this.SolutionCount++;
+                    }
+                });
         }
 
         private TspResult NtspRun(List<Location> tempTour)
@@ -311,13 +322,26 @@ namespace Gui.ViewModel
             var canvas = obj as Canvas;
             if (canvas != null)
             {
-                XSizeClass.MaxViewX = canvas.ActualWidth - XSizeClass.Margin;
-                YSizeClass.MaxViewY = canvas.ActualHeight - YSizeClass.Margin;
-
-                lock (lockObject)
+                double xDiff = Math.Abs(XSizeClass.MaxViewX - (canvas.ActualWidth - XSizeClass.Margin));
+                double yDiff = Math.Abs(YSizeClass.MaxViewY - (canvas.ActualHeight - YSizeClass.Margin));
+                if (xDiff > 10 || yDiff > 10)
                 {
-                    var copyResult = new TspResult() { BestTour = new List<Location>(BestTspResult.BestTour), BestTourEdges = new List<Edge>(BestTspResult.BestTourEdges), Distance = BestTspResult.Distance };
-                    this.BestTspResult = copyResult;
+                    XSizeClass.MaxViewX = canvas.ActualWidth - XSizeClass.Margin;
+                    YSizeClass.MaxViewY = canvas.ActualHeight - YSizeClass.Margin;
+
+                    lock (lockObject)
+                    {
+                        if (bestTspResult != null)
+                        {
+                            var copyResult = new TspResult()
+                            {
+                                BestTour = new List<Location>(BestTspResult.BestTour),
+                                BestTourEdges = new List<Edge>(BestTspResult.BestTourEdges),
+                                Distance = BestTspResult.Distance
+                            };
+                            this.BestTspResult = copyResult;
+                        }
+                    }
                 }
             }
         }

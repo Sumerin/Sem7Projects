@@ -11,6 +11,11 @@
         Title="MainWindow"
         MinWidth="1024" MinHeight="640"
         Width="1024" Height="640">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding ClosingCommand}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <Window.Resources>
         <local:XSizeConverter x:Key="xConverter" />
         <local:YSizeConverter x:Key="yConverter" />
